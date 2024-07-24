@@ -1,0 +1,94 @@
+plugins {
+    id 'org.springframework.boot' version '3.3.0' apply false
+    id 'io.spring.dependency-management' version '1.1.5' apply false
+    id 'com.google.cloud.tools.jib' version '3.4.1' apply false
+    id 'org.hibernate.orm' version '6.4.4.Final' apply false
+    id 'java'
+    id 'idea'
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}
+
+// Runs before the project's build.gradle scripts are evaluated
+// this will help read .env variable
+
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'idea'
+
+    java {
+        sourceCompatibility = JavaVersion.toVersion(properties['javaVersion'])
+        targetCompatibility = JavaVersion.toVersion(properties['javaVersion'])
+    }
+
+    // Common configuration for all subprojects
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+    }
+
+    dependencies {
+        // Apply Lombok to all submodules except healthcloud-document-service
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.4.0'
+
+        // Other common dependencies can be added here as needed
+    }
+
+    // Apply Jib plugin configuration only if the plugin is applied to the subproject
+    plugins.withId('com.google.cloud.tools.jib') {
+        jib {
+            from {
+                image = 'amazoncorretto:22'
+                platforms {
+                    //			platform {
+                    //				architecture = 'amd64'
+                    //				os = 'linux'
+                    //			}
+                    platform {
+                        architecture = 'amd64'
+                        os = 'linux'
+                    }
+                }
+            }
+            to {
+                // Define here or leave to subprojects to define individually
+                image = "${project.name}:${project.version}"
+            }
+        }
+    }
+
+
+    tasks.withType(JavaCompile) {
+        options.compilerArgs += "-Xlint:deprecation"
+    }
+
+}
+
+task jibBuildAll {
+    group = 'Docker'
+    description = 'Builds Docker images for all subprojects with Jib.'
+
+    // Dynamically include the jibDockerBuild tasks from subprojects
+    doFirst {
+        println 'Preparing to build Docker images for all services...'
+    }
+}
+
+// Dynamically creating task dependencies outside of doFirst or doLast
+subprojects.each { subproject ->
+    if (subproject.plugins.hasPlugin('com.google.cloud.tools.jib')) {
+        jibBuildAll.dependsOn(subproject.path + ':jibDockerBuild')
+    }
+}
+
+
+
+

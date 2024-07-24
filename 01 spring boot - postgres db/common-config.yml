@@ -1,0 +1,32 @@
+services:
+  network-deploy-service:
+    networks:
+      - healthcloud-apis
+
+  microservice-base-config:
+    extends:
+      service: network-deploy-service
+
+  microservice-configserver-config:
+    extends:
+      service: microservice-base-config
+    depends_on:
+      healthcloud-config-server:
+        condition: service_healthy
+      db:
+        condition: service_completed_successfully
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: "configserver:http://healthcloud-config-server:${HEALTHCLOUD_CONFIG_SERVER_PORT}/"
+
+  microservice-configserver-config-document:
+    extends:
+      service: microservice-base-config
+    depends_on:
+      healthcloud-config-server:
+        condition: service_healthy
+      mongodb:
+        condition: service_completed_successfully
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: "configserver:http://healthcloud-config-server:${HEALTHCLOUD_CONFIG_SERVER_PORT}/"
