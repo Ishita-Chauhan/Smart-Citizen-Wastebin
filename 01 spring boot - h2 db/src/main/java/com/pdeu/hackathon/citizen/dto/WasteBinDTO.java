@@ -1,5 +1,5 @@
 package com.pdeu.hackathon.citizen.dto;
-
+//importing
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
