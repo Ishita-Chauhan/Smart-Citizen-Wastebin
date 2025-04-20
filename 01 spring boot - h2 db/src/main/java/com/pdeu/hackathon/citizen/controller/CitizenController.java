@@ -1,5 +1,5 @@
 package com.pdeu.hackathon.citizen.controller;
-//importing
+//imports
 import com.pdeu.hackathon.citizen.entity.Citizen;
 import com.pdeu.hackathon.citizen.service.CitizenService;
 import org.springframework.beans.factory.annotation.Autowired;
